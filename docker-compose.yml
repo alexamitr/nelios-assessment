@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: nelios_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: nelios_wp
+      MYSQL_USER: nelios
+      MYSQL_PASSWORD: nelios
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:latest
+    container_name: nelios_wordpress
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: nelios
+      WORDPRESS_DB_PASSWORD: nelios
+      WORDPRESS_DB_NAME: nelios_wp
+    volumes:
+      - ./wordpress:/var/www/html/wp-content
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nelios_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      WORDPRESS_API_URL: http://wordpress
+      NEXT_PUBLIC_WORDPRESS_API_URL: http://localhost:8080
+    depends_on:
+      - wordpress
+
+volumes:
+  db_data:
